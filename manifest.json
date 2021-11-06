@@ -1,0 +1,9 @@
+{
+  "name": "Server Features",
+  "description": "Add context menu option to show a guild's current features.",
+  "version": "0.1",
+  "author": {
+    "name": "Toasty",
+    "id": "255515821541949440"
+  }
+}
