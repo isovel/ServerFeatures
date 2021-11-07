@@ -1,15 +1,42 @@
-/* —————————— Copyright (c) 2021 toastythetoaster, No rights reserved ——————————
+/* ———————————————————— Copyright (c) 2021 toastythetoaster ————————————————————
  *
  * Server Features Plugin
  *
  * ————————————————————————————————————————————————————————————————————————————— */
 
 import { UPlugin } from '@classes';
-import { Constants, GuildStore, getByDisplayName, React } from '@webpack';
+import { Constants, GuildStore, React, getByDisplayName } from '@webpack';
 import { after, unpatchAll } from '@patcher';
-import { findInReactTree, useForceUpdate, suppressErrors } from '@util';
+import { findInReactTree, suppressErrors, useForceUpdate } from '@util';
+import { openConfirmationModal } from '@modules/Modals';
 
-import LoafLib from '../LoafLib';
+let LoafLib: any | null = null;
+try {
+  LoafLib = require('../LoafLib');
+} catch (e) {
+  const { Text } = require('@webpack').DNGetter;
+  openConfirmationModal(
+    'Missing Library', 
+    <Text color={Text.Colors.STANDARD} size={Text.Sizes.SIZE_16}>
+      The library <strong>LoafLib</strong> required for <strong>ServerFeatures</strong> is missing. 
+      Please click Download Now to download it.
+    </Text>,
+    { 
+      cancelText: 'Cancel',
+      confirmText: 'Download Now',
+      modalKey: 'ServerFeatures_DEP_MODAL',
+      onConfirm: () => {
+        const path = require('path');
+        const git = require('isomorphic-git');
+        const http = require('isomorphic-git/http/node');
+        const fs = require('fs');
+        git.clone({ fs, http, dir: path.join(__dirname, '../', 'LoafLib'), url: 'https://github.com/toastythetoaster/LoafLib' }).then(() => {
+          Astra.plugins.reload('ServerFeatures');
+        });
+      }
+    }
+  );
+}
 
 const GuildFeatures = Object.keys(Constants.GuildFeatures).sort();
 
@@ -27,10 +54,12 @@ class Icon extends React.Component<{ displayName: string }> {
 
 export default class ServerFeatures extends UPlugin {
   start(): void {
+    if (LoafLib === null) return;
     suppressErrors(this.patchGuildContextMenu.bind(this))(this.promises);
   }
 
   stop(): void {
+    if (LoafLib === null) return;
     this.GuildFeatureOverrides.clearAll();
     unpatchAll('guildCtxMenu');
   }
