@@ -119,7 +119,7 @@ export default class ServerFeatures extends UPlugin {
   GuildFeatureOverrides = class GuildFeatureOverrides {
     protected static get(guildId: string): Set<string> {
       const overrides = settings.get('overrides', {});
-      if (!overrides[guildId]) overrides[guildId] = new Set();
+      if (!overrides[guildId] || overrides[guildId] === []) overrides[guildId] = new Set();
       return overrides[guildId];
     }
 
