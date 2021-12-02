@@ -1,3 +1,4 @@
+
 /* ———————————————————— Copyright (c) 2021 toastythetoaster ————————————————————
  *
  * Server Features Plugin
@@ -8,7 +9,10 @@ import { UPlugin } from '@classes';
 import { Constants, GuildStore, React, getByDisplayName } from '@webpack';
 import { after, unpatchAll } from '@patcher';
 import { findInReactTree, suppressErrors, useForceUpdate } from '@util';
+//@ts-ignore
 import { openConfirmationModal } from '@modules/Modals';
+
+import GuildFeatureOverrideManager from './GuildFeatureOverrideManager';
 
 let LoafLib: any | null = null;
 try {
@@ -16,12 +20,12 @@ try {
 } catch (e) {
   const { Text } = require('@webpack').DNGetter;
   openConfirmationModal(
-    'Missing Library', 
+    'Missing Library',
     <Text color={Text.Colors.STANDARD} size={Text.Sizes.SIZE_16}>
-      The library <strong>LoafLib</strong> required for <strong>ServerFeatures</strong> is missing. 
+      The library <strong>LoafLib</strong> required for <strong>ServerFeatures</strong> is missing.
       Please click Download Now to download it.
     </Text>,
-    { 
+    {
       cancelText: 'Cancel',
       confirmText: 'Download Now',
       modalKey: 'ServerFeatures_DEP_MODAL',
@@ -38,9 +42,11 @@ try {
   );
 }
 
-const GuildFeatures = Object.keys(Constants.GuildFeatures).sort();
-
 const settings = Astra.settings.get('ServerFeatures');
+
+const GuildFeatureOverrides = new GuildFeatureOverrideManager(settings);
+
+const GuildFeatures = Object.keys(Constants.GuildFeatures).sort();
 
 class Icon extends React.Component<{ displayName: string }> {
   render(): React.ReactNode {
@@ -60,7 +66,7 @@ export default class ServerFeatures extends UPlugin {
 
   stop(): void {
     if (LoafLib === null) return;
-    this.GuildFeatureOverrides.clearAll();
+    GuildFeatureOverrides.clearAll();
     unpatchAll('guildCtxMenu');
   }
 
@@ -77,10 +83,10 @@ export default class ServerFeatures extends UPlugin {
 
     GuildFeatures.forEach(Feature => {
       const checked = features.includes(Feature);
-      const overridden = this.GuildFeatureOverrides.has(guildId, Feature);
+      const overridden = GuildFeatureOverrides.has(guildId, Feature);
       const options = { noClose: true, color: overridden ? 'colorBrand' : 'colorDefault' };
       subItems.push(LoafLib.createContextMenuCheckboxItem(Feature, () => {
-        this.GuildFeatureOverrides.toggle(guildId, Feature);
+        GuildFeatureOverrides.toggle(guildId, Feature);
         subItems.filter(i => i.props.id === Feature).forEach(i => {
           i.props.checked = !i.props.checked;
         });
@@ -90,7 +96,7 @@ export default class ServerFeatures extends UPlugin {
 
     subItems.push(LoafLib.createContextMenuSeparator());
     subItems.push(LoafLib.createContextMenuItem('Reset', () => {
-      this.GuildFeatureOverrides.clear(guildId);
+      GuildFeatureOverrides.clear(guildId);
       forceUpdate();
     }, 'reset', { noClose: true, color: 'colorDanger', icon: () => React.createElement(Icon, { displayName: 'Trash' }, (<svg className='icon-LYJorE' aria-hidden='false' width='24' height='24' viewBox='0 0 24 24'>
       <path fill='currentColor' d='M15 3.999V2H9V3.999H3V5.999H21V3.999H15Z' />
@@ -114,67 +120,5 @@ export default class ServerFeatures extends UPlugin {
       if (featureSet.has('HUB')) menu.splice(2, 0, LoafLib.createContextMenuGroup(submenu));
       else menu[3].props.children.splice(1, 0, submenu);
     });
-  }
-
-  GuildFeatureOverrides = class GuildFeatureOverrides {
-    protected static get(guildId: string): Set<string> {
-      const overrides = settings.get('overrides', {});
-      if (!overrides[guildId] || overrides[guildId] === []) overrides[guildId] = new Set();
-      return overrides[guildId];
-    }
-
-    protected static set(guildId: string, features: Set<string>): void {
-      const overrides = settings.get('overrides', {});
-      if (features.size === 0) delete overrides[guildId];
-      else overrides[guildId] = features;
-      settings.set('overrides', overrides);
-    }
-
-    public static has(guildId: string, feature: string): boolean {
-      return this.get(guildId).has(feature);
-    }
-
-    protected static add(guildId: string, feature: string): void {
-      const overrides = this.get(guildId);
-      overrides.add(feature);
-      this.toggleFeature(guildId, feature);
-      this.set(guildId, overrides);
-    }
-
-    protected static delete(guildId: string, feature: string): void {
-      const overrides = this.get(guildId);
-      overrides.delete(feature);
-      this.toggleFeature(guildId, feature);
-      this.set(guildId, overrides);
-    }
-
-    public static toggle(guildId: string, feature: string): void {
-      const overrides = this.get(guildId);
-      if (overrides.has(feature)) this.delete(guildId, feature);
-      else this.add(guildId, feature);
-    }
-
-    public static clear(guildId: string): void {
-      this.get(guildId).forEach(feature => this.toggleFeature(guildId, feature));
-      this.set(guildId, new Set());
-    }
-
-    public static clearAll(): void {
-      const overrides = settings.get('overrides', {});
-      Object.keys(overrides).forEach(guildId => this.clear(guildId));
-    }
-
-    // public static initAll(): void {
-    //   const overrides = settings.get('overrides', {});
-    //   Object.keys(overrides).forEach(guildId => overrides[guildId].forEach(feature => this.toggleFeature(guildId, feature)));
-    // }
-
-    protected static toggleFeature(guildId: string, feature: string): void {
-      const guild = GuildStore.getGuild(guildId);
-      if (!guild) return;
-      const guildFeatures = guild.features;
-      if (guildFeatures.has(feature)) guildFeatures.delete(feature);
-      else guildFeatures.add(feature);
-    }
   }
 }
