@@ -108,7 +108,7 @@ export default class ServerFeatures extends UPlugin {
   }
 
   patchGuildContextMenu(): void {
-    after('guildCtxMenu', getByDisplayName('GuildContextMenu', { onlyModule: true }), 'default', (_, [props], ret) => {
+    after('guildCtxMenu', getByDisplayName('GuildContextMenu', { ret: 'exports' }), 'default', (_, [props], ret) => {
       const forceUpdate = useForceUpdate();
       const menu = findInReactTree(ret, e => e.type?.displayName === 'Menu')?.props?.children;
       if (!Array.isArray(menu)) return;
