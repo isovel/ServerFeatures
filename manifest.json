@@ -1,7 +1,7 @@
 {
   "name": "Server Features",
   "description": "Adds a context menu option that shows you and allows you to modify a guild's current (cached) features.",
-  "version": "1.0",
+  "version": "1.0.1",
   "author": {
     "name": "Toasty",
     "id": "255515821541949440"

@@ -74,18 +74,18 @@ export default class ServerFeatures extends UPlugin {
     const subItems = [];
 
     // Search bar
-    // subItems.push(LoafLib.createContextMenuControlItem((_e, _t) => (
+    // subItems.push(LoafLib.ContextMenus.createContextMenuControlItem((_e, _t) => (
     //   <span style = {{ fontSize: '32px', fontFamily: 'Whitney', background: 'linear-gradient(#FFF 49%, #000 50%)' }}>
     //     <span style = {{ fontSize: '32px', fontFamily: 'Whitney', background: 'linear-gradient(#000 49%, #FFF 50%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>isotach</span>
     //   </span>
     // ), 'search'));
-    // subItems.push(LoafLib.createContextMenuSeparator());
+    // subItems.push(LoafLib.ContextMenus.createContextMenuSeparator());
 
     GuildFeatures.forEach(Feature => {
       const checked = features.includes(Feature);
       const overridden = GuildFeatureOverrides.has(guildId, Feature);
       const options = { noClose: true, color: overridden ? 'colorBrand' : 'colorDefault' };
-      subItems.push(LoafLib.createContextMenuCheckboxItem(Feature, () => {
+      subItems.push(LoafLib.ContextMenus.createContextMenuCheckboxItem(Feature, () => {
         GuildFeatureOverrides.toggle(guildId, Feature);
         subItems.filter(i => i.props.id === Feature).forEach(i => {
           i.props.checked = !i.props.checked;
@@ -94,8 +94,8 @@ export default class ServerFeatures extends UPlugin {
       }, Feature, checked, options));
     });
 
-    subItems.push(LoafLib.createContextMenuSeparator());
-    subItems.push(LoafLib.createContextMenuItem('Reset', () => {
+    subItems.push(LoafLib.ContextMenus.createContextMenuSeparator());
+    subItems.push(LoafLib.ContextMenus.createContextMenuItem('Reset', () => {
       GuildFeatureOverrides.clear(guildId);
       forceUpdate();
     }, 'reset', { noClose: true, color: 'colorDanger', icon: () => React.createElement(Icon, { displayName: 'Trash' }, (<svg className='icon-LYJorE' aria-hidden='false' width='24' height='24' viewBox='0 0 24 24'>
@@ -104,11 +104,11 @@ export default class ServerFeatures extends UPlugin {
     </svg>
     )) }));
 
-    return LoafLib.createContextMenuSubMenu('Server Features', subItems, 'guild-features');
+    return LoafLib.ContextMenus.createContextMenuSubMenu('Server Features', subItems, 'guild-features');
   }
 
   patchGuildContextMenu(): void {
-    after('guildCtxMenu', getByDisplayName('GuildContextMenu', { onlyModule: true, ret: 'exports'}), 'default', (_, [props], ret) => {
+    after('guildCtxMenu', getByDisplayName('GuildContextMenu', { ret: 'exports' }), 'default', (_, [props], ret) => {
       const forceUpdate = useForceUpdate();
       const menu = findInReactTree(ret, e => e.type?.displayName === 'Menu')?.props?.children;
       if (!Array.isArray(menu)) return;
@@ -117,7 +117,7 @@ export default class ServerFeatures extends UPlugin {
       const featureSet: Set<string> = GuildStore.getGuild(guildId).features;
       const featureArr: string[] = Array.from(featureSet);
       const submenu = this.constructMenu(guildId, featureArr, forceUpdate);
-      if (featureSet.has('HUB')) menu.splice(2, 0, LoafLib.createContextMenuGroup(submenu));
+      if (featureSet.has('HUB')) menu.splice(2, 0, LoafLib.ContextMenus.createContextMenuGroup(submenu));
       else menu[3].props.children.splice(1, 0, submenu);
     });
   }
