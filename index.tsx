@@ -1,9 +1,9 @@
 
-/* ———————————————————— Copyright (c) 2021 toastythetoaster ————————————————————
+/* ——————— Copyright (c) 2021-2022 toastythetoaster. All rights reserved. ———————
  *
- * Server Features Plugin
+ * ServerFeatures Plugin
  *
- * ————————————————————————————————————————————————————————————————————————————— */
+ * —————————————————————————————————————————————————————————————————————————————— */
 
 import { UPlugin } from '@classes';
 import { Constants, GuildStore, React, getByDisplayName } from '@webpack';
@@ -18,34 +18,38 @@ let LoafLib: any | null = null;
 try {
   LoafLib = require('../LoafLib');
 } catch (e) {
-  const { Text } = require('@webpack').DNGetter;
-  openConfirmationModal(
-    'Missing Library',
-    <Text color={Text.Colors.STANDARD} size={Text.Sizes.SIZE_16}>
-      The library <strong>LoafLib</strong> required for <strong>ServerFeatures</strong> is missing.
-      Please click Download Now to download it.
-    </Text>,
-    {
-      cancelText: 'Cancel',
-      confirmText: 'Download Now',
-      modalKey: 'ServerFeatures_DEP_MODAL',
-      onConfirm: () => {
-        const path = require('path');
-        const git = require('isomorphic-git');
-        const http = require('isomorphic-git/http/node');
-        const fs = require('fs');
-        git.clone({ fs, http, dir: path.join(__dirname, '../', 'LoafLib'), url: 'https://github.com/toastythetoaster/LoafLib' }).then(() => {
-          Astra.plugins.reload('ServerFeatures');
-        });
+  if (global.LoafLib) ({ LoafLib } = global);
+  else {
+    const { Text } = require('@webpack').DNGetter;
+    openConfirmationModal(
+      'Missing Library',
+      <Text color={Text.Colors.STANDARD} size={Text.Sizes.SIZE_16}>
+        The library <strong>LoafLib</strong> required for <strong>ServerFeatures</strong> is missing.
+        Please click Download Now to download it.
+      </Text>,
+      {
+        cancelText: 'Cancel',
+        confirmText: 'Download Now',
+        modalKey: 'ServerFeatures_DEP_MODAL',
+        onConfirm: () => {
+          const path = require('path');
+          const git = require('isomorphic-git');
+          const http = require('isomorphic-git/http/node');
+          const fs = require('fs');
+          git.clone({ fs, http, dir: path.join(__dirname, '../', 'LoafLib'), url: 'https://github.com/toastythetoaster/LoafLib' }).then(() => {
+            Astra.plugins.reload('ServerFeatures');
+          });
+        }
       }
-    }
-  );
+    );
+  }
 }
 
+const { ContextMenus } = LoafLib; 
+const { createContextMenuGroup, createContextMenuSeparator, createContextMenuItem, createContextMenuSubMenu, createContextMenuCheckboxItem } = ContextMenus;
+
 const settings = Astra.settings.get('ServerFeatures');
-
 const GuildFeatureOverrides = new GuildFeatureOverrideManager(settings);
-
 const GuildFeatures = Object.keys(Constants.GuildFeatures).sort();
 
 class Icon extends React.Component<{ displayName: string }> {
@@ -73,19 +77,11 @@ export default class ServerFeatures extends UPlugin {
   constructMenu(guildId: string, features: string[], forceUpdate: any): any {
     const subItems = [];
 
-    // Search bar
-    // subItems.push(LoafLib.ContextMenus.createContextMenuControlItem((_e, _t) => (
-    //   <span style = {{ fontSize: '32px', fontFamily: 'Whitney', background: 'linear-gradient(#FFF 49%, #000 50%)' }}>
-    //     <span style = {{ fontSize: '32px', fontFamily: 'Whitney', background: 'linear-gradient(#000 49%, #FFF 50%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>isotach</span>
-    //   </span>
-    // ), 'search'));
-    // subItems.push(LoafLib.ContextMenus.createContextMenuSeparator());
-
     GuildFeatures.forEach(Feature => {
       const checked = features.includes(Feature);
       const overridden = GuildFeatureOverrides.has(guildId, Feature);
       const options = { noClose: true, color: overridden ? 'colorBrand' : 'colorDefault' };
-      subItems.push(LoafLib.ContextMenus.createContextMenuCheckboxItem(Feature, () => {
+      subItems.push(createContextMenuCheckboxItem(Feature, () => {
         GuildFeatureOverrides.toggle(guildId, Feature);
         subItems.filter(i => i.props.id === Feature).forEach(i => {
           i.props.checked = !i.props.checked;
@@ -94,8 +90,8 @@ export default class ServerFeatures extends UPlugin {
       }, Feature, checked, options));
     });
 
-    subItems.push(LoafLib.ContextMenus.createContextMenuSeparator());
-    subItems.push(LoafLib.ContextMenus.createContextMenuItem('Reset', () => {
+    subItems.push(createContextMenuSeparator());
+    subItems.push(createContextMenuItem('Reset', () => {
       GuildFeatureOverrides.clear(guildId);
       forceUpdate();
     }, 'reset', { noClose: true, color: 'colorDanger', icon: () => React.createElement(Icon, { displayName: 'Trash' }, (<svg className='icon-LYJorE' aria-hidden='false' width='24' height='24' viewBox='0 0 24 24'>
@@ -104,7 +100,7 @@ export default class ServerFeatures extends UPlugin {
     </svg>
     )) }));
 
-    return LoafLib.ContextMenus.createContextMenuSubMenu('Server Features', subItems, 'guild-features');
+    return createContextMenuSubMenu('Server Features', subItems, 'guild-features');
   }
 
   patchGuildContextMenu(): void {
@@ -117,7 +113,7 @@ export default class ServerFeatures extends UPlugin {
       const featureSet: Set<string> = GuildStore.getGuild(guildId).features;
       const featureArr: string[] = Array.from(featureSet);
       const submenu = this.constructMenu(guildId, featureArr, forceUpdate);
-      if (featureSet.has('HUB')) menu.splice(2, 0, LoafLib.ContextMenus.createContextMenuGroup(submenu));
+      if (featureSet.has('HUB')) menu.splice(2, 0, createContextMenuGroup(submenu));
       else menu[3].props.children.splice(1, 0, submenu);
     });
   }

@@ -1,9 +1,17 @@
 {
   "name": "Server Features",
   "description": "Adds a context menu option that shows you and allows you to modify a guild's current (cached) features.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "Toasty",
     "id": "255515821541949440"
-  }
+  },
+  "id": "ServerFeatures",
+  "support": "NDzjMB2WhR",
+  "donations": [
+    {
+      "name": "Ko-fi",
+      "link": "https://ko-fi.com/slice"
+    }
+  ]
 }
