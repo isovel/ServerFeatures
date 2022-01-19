@@ -1,9 +1,9 @@
 
-/* ———————————————————— Copyright (c) 2021 toastythetoaster ————————————————————
+/* ——————— Copyright (c) 2021-2022 toastythetoaster. All rights reserved. ———————
  *
- * Guild Feature Override Manager Module
+ * GuildFeatureOverrideManager Module
  *
- * ————————————————————————————————————————————————————————————————————————————— */
+ * —————————————————————————————————————————————————————————————————————————————— */
 
 import { GuildStore } from '@webpack';
 import { SettingsObject } from '@classes';
